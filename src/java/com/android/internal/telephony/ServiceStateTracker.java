@@ -1192,4 +1192,9 @@ public abstract class ServiceStateTracker extends Handler {
         }
         return networkName;
     }
+
+    /** Check if the device is shutting down. */
+    public final boolean isDeviceShuttingDown() {
+        return mDeviceShuttingDown;
+    }
 }
