@@ -455,12 +455,10 @@ public class CDMAPhone extends PhoneBase {
                 && ImsManager.isNonTtyOrTtyOnVolteEnabled(mContext)
                 && (imsPhone.getServiceState().getState() != ServiceState.STATE_POWER_OFF);
 
-        boolean useImsForUt = imsPhone != null && imsPhone.isUtEnabled()
-                && dialString.endsWith("#");
-
         boolean isUt = PhoneNumberUtils.extractNetworkPortionAlt(PhoneNumberUtils.
                 stripSeparators(dialString)).endsWith("#");
 
+        boolean useImsForUt = imsPhone != null && imsPhone.isUtEnabled();
 
         if (DBG) {
             Rlog.d(LOG_TAG, "imsUseEnabled=" + imsUseEnabled
@@ -1011,7 +1009,7 @@ public class CDMAPhone extends PhoneBase {
                                 number = defaultVMNumberArray[0];
                             } else if (defaultVMNumberArray.length == 2 &&
                                     !TextUtils.isEmpty(defaultVMNumberArray[1]) &&
-                                    defaultVMNumberArray[1].equalsIgnoreCase(getGroupIdLevel1())) {
+                                    isMatchGid(defaultVMNumberArray[1])) {
                                 number = defaultVMNumberArray[0];
                                 break;
                             }

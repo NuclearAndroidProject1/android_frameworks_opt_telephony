@@ -82,7 +82,7 @@ public class PhoneProxy extends Handler implements Phone {
     private static final int EVENT_SIM_RECORDS_LOADED = 7;
     private static final int EVENT_RADIO_AVAILABLE = 8;
 
-    protected int mPhoneId = 0;
+    private int mPhoneId = 0;
 
     private Context mContext;
     private BroadcastReceiver mPhoneProxyReceiver = new BroadcastReceiver() {

@@ -372,7 +372,7 @@ public final class ImsPhoneCallTracker extends CallTracker {
 
             mPendingMO = new ImsPhoneConnection(mPhone,
                     checkForTestEmergencyNumber(dialString), this, mForegroundCall,
-                    isEmergencyNumber, intentExtras);
+                    isEmergencyNumber);
         }
         addConnection(mPendingMO);
 
@@ -473,6 +473,25 @@ public final class ImsPhoneCallTracker extends CallTracker {
             profile.setCallExtraInt(ImsCallProfile.EXTRA_OIR, clirMode);
             profile.setCallExtraBoolean(TelephonyProperties.EXTRAS_IS_CONFERENCE_URI,
                     isConferenceUri);
+
+            // Translate call subject intent-extra from Telecom-specific extra key to the
+            // ImsCallProfile key.
+            if (intentExtras != null) {
+                if (intentExtras.containsKey(android.telecom.TelecomManager.EXTRA_CALL_SUBJECT)) {
+                    intentExtras.putString(ImsCallProfile.EXTRA_DISPLAY_TEXT,
+                            cleanseInstantLetteringMessage(intentExtras.getString(
+                                    android.telecom.TelecomManager.EXTRA_CALL_SUBJECT))
+                    );
+                }
+
+                // Pack the OEM-specific call extras.
+                profile.mCallExtras.putBundle(ImsCallProfile.EXTRA_OEM_EXTRAS, intentExtras);
+
+                // NOTE: Extras to be sent over the network are packed into the
+                // intentExtras individually, with uniquely defined keys.
+                // These key-value pairs are processed by IMS Service before
+                // being sent to the lower layers/to the network.
+            }
 
             // Translate call subject intent-extra from Telecom-specific extra key to the
             // ImsCallProfile key.
@@ -1631,7 +1650,8 @@ public final class ImsPhoneCallTracker extends CallTracker {
                 boolean tmpIsVideoCallEnabled = isVideoCallEnabled();
                 // Check enabledFeatures to determine capabilities. We ignore disabledFeatures.
                 for (int  i = ImsConfig.FeatureConstants.FEATURE_TYPE_VOICE_OVER_LTE;
-                        i <= ImsConfig.FeatureConstants.FEATURE_TYPE_UT_OVER_WIFI; i++) {
+                        i <= ImsConfig.FeatureConstants.FEATURE_TYPE_UT_OVER_WIFI &&
+                        i < enabledFeatures.length; i++) {
                     if (enabledFeatures[i] == i) {
                         // If the feature is set to its own integer value it is enabled.
                         if (DBG) log("onFeatureCapabilityChanged(" + i + ", " +
@@ -1668,6 +1688,19 @@ public final class ImsPhoneCallTracker extends CallTracker {
                 if (tmpIsVideoCallEnabled != isVideoCallEnabled()) {
                     mPhone.notifyForVideoCapabilityChanged(isVideoCallEnabled());
                 }
+
+                // TODO: Use the ImsCallSession or ImsCallProfile to tell the initial Wifi state and
+                // {@link ImsCallSession.Listener#callSessionHandover} to listen for changes to
+                // wifi capability caused by a handover.
+                if (DBG) log("onFeatureCapabilityChanged: isVolteEnabled=" + isVolteEnabled()
+                            + ", isVideoCallEnabled=" + isVideoCallEnabled()
+                            + ", isVowifiEnabled=" + isVowifiEnabled()
+                            + ", isUtEnabled=" + isUtEnabled());
+                for (ImsPhoneConnection connection : mConnections) {
+                    connection.updateWifiState();
+                }
+
+                mPhone.onFeatureCapabilityChanged();
             }
         }
 
