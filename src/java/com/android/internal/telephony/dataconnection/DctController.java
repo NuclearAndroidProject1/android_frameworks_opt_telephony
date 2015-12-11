@@ -452,7 +452,7 @@ public class DctController extends Handler {
         Iterator<Integer> iterator = mRequestInfos.keySet().iterator();
         while (iterator.hasNext()) {
             RequestInfo requestInfo = mRequestInfos.get(iterator.next());
-            if (requestInfo.phoneId == phoneId) {
+            if (getRequestPhoneId(requestInfo.request) == phoneId) {
                 onExecuteRequest(requestInfo);
             }
         }
@@ -513,19 +513,7 @@ public class DctController extends Handler {
             String specifier = requestInfo.request.networkCapabilities
                 .getNetworkSpecifier();
             if (specifier == null || specifier.equals("")) {
-                if (requestInfo.executed) {
-                    String apn = apnForNetworkRequest(requestInfo.request);
-                    logd("[setDataSubId] subId =" + dataSubId);
-                    requestInfo.log(
-                            "DctController.onSettingsChange releasing request");
-                    for (int i = 0; i < mPhoneNum; i++) {
-                        PhoneBase phoneBase =
-                            (PhoneBase)mPhones[i].getActivePhone();
-                        DcTrackerBase dcTracker = phoneBase.mDcTracker;
-                        dcTracker.decApnRefCount(apn, requestInfo.getLog());
-                        requestInfo.executed = false;
-                    }
-                }
+                onReleaseRequest(requestInfo);
             }
         }
     }
@@ -555,8 +543,7 @@ public class DctController extends Handler {
     }
 
     protected int getTopPriorityRequestPhoneId() {
-        RequestInfo retRequestInfo = null;
-        int phoneId = 0;
+        String topSubId = null;
         int priority = -1;
         int subId;
 

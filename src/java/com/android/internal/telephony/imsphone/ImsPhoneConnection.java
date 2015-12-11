@@ -189,7 +189,7 @@ public class ImsPhoneConnection extends Connection {
     /** This is an MO call, created when dialing */
     /*package*/
     ImsPhoneConnection(ImsPhone phone, String dialString, ImsPhoneCallTracker ct,
-            ImsPhoneCall parent, boolean isEmergency) {
+            ImsPhoneCall parent, boolean isEmergency, Bundle extras) {
         createWakeLock(phone.getContext());
         acquireWakeLock();
         boolean isConferenceUri = false;
@@ -713,7 +713,6 @@ public class ImsPhoneConnection extends Connection {
         }
 
         boolean updateParent = mParent.update(this, imsCall, state);
-        boolean updateMediaCapabilities = updateMediaCapabilities(imsCall);
         boolean updateWifiState = updateWifiState();
         boolean updateAddressDisplay = updateAddressDisplay(imsCall);
         boolean updateMediaCapabilities = updateMediaCapabilities(imsCall);

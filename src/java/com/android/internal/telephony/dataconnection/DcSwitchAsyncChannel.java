@@ -72,7 +72,7 @@ public class DcSwitchAsyncChannel extends AsyncChannel {
         int executedPhoneId;
         private final LocalLog requestLog;
 
-        public RequestInfo(NetworkRequest request, int priority, LocalLog l, int phoneId) {
+        public RequestInfo(NetworkRequest request, int priority, LocalLog l) {
             this.request = request;
             this.priority = priority;
             this.requestLog = l;
@@ -91,6 +91,16 @@ public class DcSwitchAsyncChannel extends AsyncChannel {
         public String toString() {
             return "[ request=" + request + ", executedPhoneId=" + executedPhoneId +
                 ", priority=" + priority + "]";
+        }
+    }
+
+    public static class ConnectInfo {
+        final RequestInfo request;
+        final Message responseMessage;
+
+        public ConnectInfo(RequestInfo req, Message msg) {
+            this.request = req;
+            this.responseMessage = msg;
         }
     }
 

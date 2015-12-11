@@ -372,7 +372,7 @@ public final class ImsPhoneCallTracker extends CallTracker {
 
             mPendingMO = new ImsPhoneConnection(mPhone,
                     checkForTestEmergencyNumber(dialString), this, mForegroundCall,
-                    isEmergencyNumber);
+                    isEmergencyNumber, intentExtras);
         }
         addConnection(mPendingMO);
 
