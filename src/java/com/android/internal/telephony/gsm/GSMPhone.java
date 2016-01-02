@@ -331,7 +331,7 @@ public class GSMPhone extends PhoneBase {
         boolean cf = false;
         IccRecords r = mIccRecords.get();
         if (r != null && r.isCallForwardStatusStored()) {
-            cf = r.getVoiceCallForwardingFlag();
+            cf = r.getVoiceCallForwardingFlag() == IccRecords.CALL_FORWARDING_STATUS_ENABLED;
         } else {
             cf = getCallForwardingPreference();
         }
@@ -827,21 +827,23 @@ public class GSMPhone extends PhoneBase {
                  && (imsPhone.getServiceState().getState() == ServiceState.STATE_IN_SERVICE)
                  && !shallDialOnCircuitSwitch(intentExtras);
 
-        boolean useImsForEmergency = ImsManager.isVolteEnabledByPlatform(mContext)
-                && imsPhone != null
+        boolean useImsForEmergency = imsPhone != null
                 && isEmergency
-                &&  mContext.getResources().getBoolean(
+                && mContext.getResources().getBoolean(
                         com.android.internal.R.bool.useImsAlwaysForEmergencyCall)
                 && ImsManager.isNonTtyOrTtyOnVolteEnabled(mContext)
                 && (imsPhone.getServiceState().getState() != ServiceState.STATE_POWER_OFF);
 
-        boolean useImsForUt = imsPhone != null && imsPhone.isUtEnabled()
-                && dialString.endsWith("#");
+        boolean isUt = PhoneNumberUtils.extractNetworkPortionAlt(PhoneNumberUtils.
+                stripSeparators(dialString)).endsWith("#");
+
+        boolean useImsForUt = imsPhone != null && imsPhone.isUtEnabled();
 
         if (LOCAL_DEBUG) {
             Rlog.d(LOG_TAG, "imsUseEnabled=" + imsUseEnabled
                     + ", useImsForEmergency=" + useImsForEmergency
                     + ", useImsForUt=" + useImsForUt
+                    + ", isUt=" + isUt
                     + ", imsPhone=" + imsPhone
                     + ", imsPhone.isVolteEnabled()="
                     + ((imsPhone != null) ? imsPhone.isVolteEnabled() : "N/A")
@@ -855,7 +857,7 @@ public class GSMPhone extends PhoneBase {
 
         ImsPhone.checkWfcWifiOnlyModeBeforeDial(mImsPhone, mContext);
 
-        if (imsUseEnabled || useImsForEmergency || useImsForUt) {
+        if ((imsUseEnabled && (!isUt || useImsForUt)) || useImsForEmergency) {
             try {
                 if (LOCAL_DEBUG) Rlog.d(LOG_TAG, "Trying IMS PS call");
                 return imsPhone.dial(dialString, uusInfo, videoState, intentExtras);
@@ -1028,7 +1030,7 @@ public class GSMPhone extends PhoneBase {
                                 number = defaultVMNumberArray[0];
                             } else if (defaultVMNumberArray.length == 2 &&
                                     !TextUtils.isEmpty(defaultVMNumberArray[1]) &&
-                                    defaultVMNumberArray[1].equalsIgnoreCase(getGroupIdLevel1())) {
+                                    isMatchGid(defaultVMNumberArray[1])) {
                                 number = defaultVMNumberArray[0];
                                 break;
                             }
@@ -1285,10 +1287,12 @@ public class GSMPhone extends PhoneBase {
         ImsPhone imsPhone = mImsPhone;
         if ((imsPhone != null)
                 && (imsPhone.getServiceState().getState() == ServiceState.STATE_IN_SERVICE)) {
-            imsPhone.setOutgoingCallerIdDisplay(commandInterfaceCLIRMode,
-            obtainMessage(EVENT_SET_CLIR_COMPLETE, commandInterfaceCLIRMode, 0, onComplete));
+            imsPhone.setOutgoingCallerIdDisplay(commandInterfaceCLIRMode, onComplete);
             return;
         }
+        // Packing CLIR value in the message. This will be required for
+        // SharedPreference caching, if the message comes back as part of
+        // a success response.
         mCi.setCLIR(commandInterfaceCLIRMode,
                 obtainMessage(EVENT_SET_CLIR_COMPLETE, commandInterfaceCLIRMode, 0, onComplete));
     }
@@ -1641,8 +1645,7 @@ public class GSMPhone extends PhoneBase {
                 IccRecords r = mIccRecords.get();
                 Cfu cfu = (Cfu) ar.userObj;
                 if (ar.exception == null && r != null) {
-                    r.setVoiceCallForwardingFlag(1, msg.arg1 == 1, cfu.mSetCfNumber);
-                    setCallForwardingPreference(msg.arg1 == 1);
+                    setVoiceCallForwardingFlag(1, msg.arg1 == 1, cfu.mSetCfNumber);
                 }
                 if (cfu.mOnComplete != null) {
                     AsyncResult.forMessage(cfu.mOnComplete, ar.result, ar.exception);
@@ -1803,34 +1806,17 @@ public class GSMPhone extends PhoneBase {
         return false;
     }
 
-    /**
-     * Saves CLIR setting so that we can re-apply it as necessary
-     * (in case the RIL resets it across reboots).
-     */
-    public void saveClirSetting(int commandInterfaceCLIRMode) {
-        // open the shared preferences editor, and write the value.
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putInt(CLIR_KEY + getPhoneId(), commandInterfaceCLIRMode);
-
-        // commit and log the result.
-        if (! editor.commit()) {
-            Rlog.e(LOG_TAG, "failed to commit CLIR preference");
-        }
-    }
-
     private void handleCfuQueryResult(CallForwardInfo[] infos) {
         IccRecords r = mIccRecords.get();
         if (r != null) {
             if (infos == null || infos.length == 0) {
                 // Assume the default is not active
                 // Set unconditional CFF in SIM to false
-                r.setVoiceCallForwardingFlag(1, false, null);
+                setVoiceCallForwardingFlag(1, false, null);
             } else {
                 for (int i = 0, s = infos.length; i < s; i++) {
                     if ((infos[i].serviceClass & SERVICE_CLASS_VOICE) != 0) {
-                        setCallForwardingPreference(infos[i].status == 1);
-                        r.setVoiceCallForwardingFlag(1, (infos[i].status == 1),
+                        setVoiceCallForwardingFlag(1, (infos[i].status == 1),
                             infos[i].number);
                         // should only have the one
                         break;
@@ -1940,7 +1926,7 @@ public class GSMPhone extends PhoneBase {
                     ((configArray.length == 1 && configArray[0].equalsIgnoreCase("true")) ||
                         (configArray.length == 2 && !TextUtils.isEmpty(configArray[1]) &&
                             configArray[0].equalsIgnoreCase("true") &&
-                            configArray[1].equalsIgnoreCase(getGroupIdLevel1())))) {
+                            isMatchGid(configArray[1])))) {
                             isProhibited = true;
             }
         }

@@ -124,6 +124,15 @@ public class PhoneFactory {
 
                 sPhoneNotifier = new DefaultPhoneNotifier();
 
+                // Get preferred network mode
+                int preferredNetworkMode = RILConstants.PREFERRED_NETWORK_MODE;
+                if (TelephonyManager.getLteOnCdmaModeStatic() == PhoneConstants.LTE_ON_CDMA_TRUE) {
+                    preferredNetworkMode = Phone.NT_MODE_GLOBAL;
+                }
+                if (TelephonyManager.getLteOnGsmModeStatic() != 0) {
+                    preferredNetworkMode = Phone.NT_MODE_LTE_GSM_WCDMA;
+                }
+
                 int cdmaSubscription = CdmaSubscriptionSourceManager.getDefault(context);
                 Rlog.i(LOG_TAG, "Cdma Subscription set to " + cdmaSubscription);
 
@@ -145,7 +154,7 @@ public class PhoneFactory {
                     } catch (SettingNotFoundException snfe) {
                         Rlog.e(LOG_TAG, "Settings Exception Reading Value At Index for"+
                                " Settings.Global.PREFERRED_NETWORK_MODE");
-                        networkModes[i] = RILConstants.PREFERRED_NETWORK_MODE;
+                        networkModes[i] = preferredNetworkMode;
                     }
                     Rlog.i(LOG_TAG, "Network Mode set to " + Integer.toString(networkModes[i]));
                     sCommandsInterfaces[i] = new RIL(context, networkModes[i],
@@ -165,11 +174,9 @@ public class PhoneFactory {
                     if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
                         phone = TelephonyPluginDelegate.getInstance().makeGSMPhone(context,
                                 sCommandsInterfaces[i], sPhoneNotifier, i);
-                        phone.startMonitoringImsService();
                     } else if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
                         phone = TelephonyPluginDelegate.getInstance().makeCDMALTEPhone(context,
                                 sCommandsInterfaces[i], sPhoneNotifier, i);
-                        phone.startMonitoringImsService();
                     }
                     Rlog.i(LOG_TAG, "Creating Phone with type = " + phoneType + " sub = " + i);
 
@@ -206,6 +213,12 @@ public class PhoneFactory {
 
                 TelephonyPluginDelegate.getInstance().
                         initExtTelephonyClasses(context, sProxyPhones, sCommandsInterfaces);
+                // Start monitoring after defaults have been made.
+                // Default phone must be ready before ImsPhone is created
+                // because ImsService might need it when it is being opened.
+                for (int i = 0; i < numPhones; i++) {
+                    sProxyPhones[i].startMonitoringImsService();
+                }
             }
         }
     }

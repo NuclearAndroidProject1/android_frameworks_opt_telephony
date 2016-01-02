@@ -314,7 +314,6 @@ public final class Telephony {
          * @hide
          */
         public static Cursor query(ContentResolver cr, String[] projection) {
-            android.util.SeempLog.record(10);
             return cr.query(CONTENT_URI, projection, null, null, DEFAULT_SORT_ORDER);
         }
 
@@ -324,7 +323,6 @@ public final class Telephony {
          */
         public static Cursor query(ContentResolver cr, String[] projection,
                 String where, String orderBy) {
-            android.util.SeempLog.record(10);
             return cr.query(CONTENT_URI, projection, where,
                     null, orderBy == null ? DEFAULT_SORT_ORDER : orderBy);
         }
@@ -1954,7 +1952,6 @@ public final class Telephony {
          */
         public static Cursor query(
                 ContentResolver cr, String[] projection) {
-            android.util.SeempLog.record(10);
             return cr.query(CONTENT_URI, projection, null, null, DEFAULT_SORT_ORDER);
         }
 
@@ -1965,7 +1962,6 @@ public final class Telephony {
         public static Cursor query(
                 ContentResolver cr, String[] projection,
                 String where, String orderBy) {
-            android.util.SeempLog.record(10);
             return cr.query(CONTENT_URI, projection,
                     where, null, orderBy == null ? DEFAULT_SORT_ORDER : orderBy);
         }
@@ -2751,6 +2747,37 @@ public final class Telephony {
          * @hide
          */
         public static final String EDITED = "edited";
+
+        /**
+         * <P>Type: INTEGER (boolean)</P>
+         * @hide
+         */
+        public static final String READ_ONLY = "read_only";
+
+        /**
+         * <P>Type: TEXT</P>
+         * @hide
+         */
+        public static final String PPP_NUMBER =  "ppp_number";
+
+        /**
+         * <P>Type: TEXT</P>
+         * @hide
+         */
+        public static final String LOCALIZED_NAME = "localized_name";
+
+        /**
+         * <P>Type: TEXT</P>
+         * @hide
+         */
+        public static final String VISIT_AREA = "visit_area";
+
+        /**
+         * Is this APN visible to the user?
+         * <p>Type: INTEGER (boolean) </p>
+         * @hide
+         */
+        public static final String USER_VISIBLE = "user_visible";
 
         /**
          * Following are possible values for the EDITED field
