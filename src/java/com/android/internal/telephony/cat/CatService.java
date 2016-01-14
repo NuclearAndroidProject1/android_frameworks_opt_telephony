@@ -388,7 +388,9 @@ public class CatService extends Handler implements AppInterface {
                 }
                 resultCode = cmdParams.mLoadIconFailed ? ResultCode.PRFRMD_ICON_NOT_DISPLAYED
                                                                             : ResultCode.OK;
-                sendTerminalResponse(cmdParams.mCmdDet, resultCode, false, 0, null);
+                if (isProactiveCmd) {
+                    sendTerminalResponse(cmdParams.mCmdDet, resultCode, false, 0, null);
+                }
                 break;
             case DISPLAY_TEXT:
                 break;
@@ -399,7 +401,9 @@ public class CatService extends Handler implements AppInterface {
             case SET_UP_IDLE_MODE_TEXT:
                 resultCode = cmdParams.mLoadIconFailed ? ResultCode.PRFRMD_ICON_NOT_DISPLAYED
                                                                             : ResultCode.OK;
-                sendTerminalResponse(cmdParams.mCmdDet,resultCode, false, 0, null);
+                if (isProactiveCmd) {
+                    sendTerminalResponse(cmdParams.mCmdDet,resultCode, false, 0, null);
+                }
                 break;
             case SET_UP_EVENT_LIST:
                 if (isProactiveCmd) {

@@ -715,8 +715,8 @@ public class ImsPhoneConnection extends Connection {
         boolean updateParent = mParent.update(this, imsCall, state);
         boolean updateWifiState = updateWifiState();
         boolean updateAddressDisplay = updateAddressDisplay(imsCall);
-        boolean updateMediaCapabilities = updateMediaCapabilities(imsCall);
         boolean updateExtras = updateExtras(imsCall);
+        boolean updateMediaCapabilities = updateMediaCapabilities(imsCall);
 
         return updateParent || updateWifiState || updateAddressDisplay || updateMediaCapabilities
                 || updateExtras;

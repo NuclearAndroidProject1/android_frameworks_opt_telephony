@@ -67,9 +67,9 @@ public class DcSwitchAsyncChannel extends AsyncChannel {
     }
 
     public static class RequestInfo {
-        final NetworkRequest request;
-        final int priority;
-        int executedPhoneId;
+        public final NetworkRequest request;
+        public final int priority;
+        public int executedPhoneId;
         private final LocalLog requestLog;
 
         public RequestInfo(NetworkRequest request, int priority, LocalLog l) {

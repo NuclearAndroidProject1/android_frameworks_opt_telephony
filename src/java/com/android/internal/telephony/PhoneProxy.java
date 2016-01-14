@@ -78,9 +78,10 @@ public class PhoneProxy extends Handler implements Phone {
     protected static final int EVENT_REQUEST_VOICE_RADIO_TECH_DONE = 3;
     protected static final int EVENT_RIL_CONNECTED = 4;
     private static final int EVENT_UPDATE_PHONE_OBJECT = 5;
+    private static final int EVENT_SIM_RECORDS_LOADED = 6;
+    private static final int EVENT_RADIO_AVAILABLE = 7;
+    protected static final int EVENT_RADIO_UNAVAILABLE = 8;
     private static final int EVENT_CARRIER_CONFIG_CHANGED = 6;
-    private static final int EVENT_SIM_RECORDS_LOADED = 7;
-    private static final int EVENT_RADIO_AVAILABLE = 8;
 
     private int mPhoneId = 0;
 
@@ -1416,6 +1417,10 @@ public class PhoneProxy extends Handler implements Phone {
 
     @Override
     public void dispose() {
+        if (mActivePhone != null) {
+            mActivePhone.unregisterForSimRecordsLoaded(this);
+            mActivePhone.getContext().unregisterReceiver(sConfigChangeReceiver);
+        }
         mCommandsInterface.unregisterForOn(this);
         mCommandsInterface.unregisterForAvailable(this);
         mCommandsInterface.unregisterForVoiceRadioTechChanged(this);
@@ -1672,6 +1677,22 @@ public class PhoneProxy extends Handler implements Phone {
 
     public boolean isWifiCallingEnabled() {
         return mActivePhone.isWifiCallingEnabled();
+    }
+
+    @Override
+    public void getCallForwardingOption(int commandInterfaceCFReason,
+            int commandInterfaceServiceClass, Message onComplete) {
+        mActivePhone.getCallForwardingOption(commandInterfaceCFReason,
+                commandInterfaceServiceClass, onComplete);
+    }
+
+    @Override
+    public void setCallForwardingOption(int commandInterfaceCFReason,
+            int commandInterfaceCFAction, String dialingNumber,
+            int commandInterfaceServiceClass, int timerSeconds, Message onComplete) {
+        mActivePhone.setCallForwardingOption(commandInterfaceCFReason,
+                commandInterfaceCFAction, dialingNumber,
+                commandInterfaceServiceClass, timerSeconds, onComplete);
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

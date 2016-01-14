@@ -90,7 +90,7 @@ public final class ImsPhoneCallTracker extends CallTracker {
     //Indices map to ImsConfig.FeatureConstants
     private boolean[] mImsFeatureEnabled = {false, false, false, false, false, false};
     private final String[] mImsFeatureStrings = {"VoLTE", "ViLTE", "VoWiFi", "ViWiFi",
-            "UTLTE", "UTWiFi"};
+            "UtLTE", "UtWiFi"};
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
@@ -477,25 +477,6 @@ public final class ImsPhoneCallTracker extends CallTracker {
             profile.setCallExtraBoolean(TelephonyProperties.EXTRAS_IS_CONFERENCE_URI,
                     isConferenceUri);
             profile.setCallExtraBoolean(ImsCallProfile.EXTRA_IS_CALL_PULL, isCallPull);
-
-            // Translate call subject intent-extra from Telecom-specific extra key to the
-            // ImsCallProfile key.
-            if (intentExtras != null) {
-                if (intentExtras.containsKey(android.telecom.TelecomManager.EXTRA_CALL_SUBJECT)) {
-                    intentExtras.putString(ImsCallProfile.EXTRA_DISPLAY_TEXT,
-                            cleanseInstantLetteringMessage(intentExtras.getString(
-                                    android.telecom.TelecomManager.EXTRA_CALL_SUBJECT))
-                    );
-                }
-
-                // Pack the OEM-specific call extras.
-                profile.mCallExtras.putBundle(ImsCallProfile.EXTRA_OEM_EXTRAS, intentExtras);
-
-                // NOTE: Extras to be sent over the network are packed into the
-                // intentExtras individually, with uniquely defined keys.
-                // These key-value pairs are processed by IMS Service before
-                // being sent to the lower layers/to the network.
-            }
 
             // Translate call subject intent-extra from Telecom-specific extra key to the
             // ImsCallProfile key.
@@ -1428,24 +1409,15 @@ public final class ImsPhoneCallTracker extends CallTracker {
             }
             foregroundImsPhoneCall.merge(peerImsPhoneCall, ImsPhoneCall.State.ACTIVE);
 
-            // TODO Temporary code. Remove the try-catch block from the runnable once thread
-            // synchronization is fixed.
-            Runnable r = new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        final ImsPhoneConnection conn = findConnection(call);
-                        log("onCallMerged: ImsPhoneConnection=" + conn);
-                        log("onCallMerged: CurrentVideoProvider=" + conn.getVideoProvider());
-                        setVideoCallProvider(conn, call);
-                        log("onCallMerged: CurrentVideoProvider=" + conn.getVideoProvider());
-                    } catch (Exception e) {
-                        loge("onCallMerged: exception " + e);
-                    }
-                }
-            };
-
-            ImsPhoneCallTracker.this.post(r);
+            try {
+                final ImsPhoneConnection conn = findConnection(call);
+                log("onCallMerged: ImsPhoneConnection=" + conn);
+                log("onCallMerged: CurrentVideoProvider=" + conn.getVideoProvider());
+                setVideoCallProvider(conn, call);
+                log("onCallMerged: CurrentVideoProvider=" + conn.getVideoProvider());
+            } catch (Exception e) {
+                loge("onCallMerged: exception " + e);
+            }
 
             // After merge complete, update foreground as Active
             // and background call as Held, if background call exists
@@ -1480,7 +1452,7 @@ public final class ImsPhoneCallTracker extends CallTracker {
 
             // Start plumbing this even through Telecom so other components can take
             // appropriate action.
-            ImsPhoneConnection conn = findConnection(call);
+            ImsPhoneConnection conn = findConnection(mForegroundCall.getImsCall());
             if (conn != null) {
                 conn.onConferenceMergeFailed();
             }
@@ -1692,19 +1664,6 @@ public final class ImsPhoneCallTracker extends CallTracker {
                 if (tmpIsVideoCallEnabled != isVideoCallEnabled()) {
                     mPhone.notifyForVideoCapabilityChanged(isVideoCallEnabled());
                 }
-
-                // TODO: Use the ImsCallSession or ImsCallProfile to tell the initial Wifi state and
-                // {@link ImsCallSession.Listener#callSessionHandover} to listen for changes to
-                // wifi capability caused by a handover.
-                if (DBG) log("onFeatureCapabilityChanged: isVolteEnabled=" + isVolteEnabled()
-                            + ", isVideoCallEnabled=" + isVideoCallEnabled()
-                            + ", isVowifiEnabled=" + isVowifiEnabled()
-                            + ", isUtEnabled=" + isUtEnabled());
-                for (ImsPhoneConnection connection : mConnections) {
-                    connection.updateWifiState();
-                }
-
-                mPhone.onFeatureCapabilityChanged();
             }
         }
 
@@ -1796,7 +1755,8 @@ public final class ImsPhoneCallTracker extends CallTracker {
                 }
                 break;
             case EVENT_DIAL_PENDINGMO:
-                dialInternal(mPendingMO, mClirMode, mPendingCallVideoState, mPendingIntentExtras);
+                dialInternal(mPendingMO, mClirMode, mPendingCallVideoState,
+                        mPendingIntentExtras);
                 mPendingIntentExtras = null;
                 break;
 

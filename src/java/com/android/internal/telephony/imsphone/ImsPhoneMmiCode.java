@@ -698,12 +698,16 @@ public final class ImsPhoneMmiCode extends Handler implements MmiCode {
                 || (mSc != null && mSc.equals(SC_BS_MT))
                 || (mSc != null && mSc.equals(SC_BAICa))) {
 
-            int serviceClass = siToServiceClass(mSib);
-            if (serviceClass != SERVICE_CLASS_NONE
-                    && serviceClass != SERVICE_CLASS_VOICE) {
-                return false;
+            try {
+                int serviceClass = siToServiceClass(mSib);
+                if (serviceClass != SERVICE_CLASS_NONE
+                        && serviceClass != SERVICE_CLASS_VOICE) {
+                    return false;
+                }
+                return true;
+            } catch (RuntimeException exc) {
+                Rlog.d(LOG_TAG, "Invalid service class " + exc);
             }
-            return true;
         } else if (isPinPukCommand()
                 || (mSc != null
                     && (mSc.equals(SC_PWD) || mSc.equals(SC_CLIP) || mSc.equals(SC_CLIR)))) {
@@ -1048,9 +1052,9 @@ public final class ImsPhoneMmiCode extends Handler implements MmiCode {
                 */
                 if ((ar.exception == null) && (msg.arg1 == 1)) {
                     boolean cffEnabled = (msg.arg2 == 1);
-                    if (mIccRecords != null) {
-                        mPhone.setVoiceCallForwardingFlag(1, cffEnabled, mDialingNumber);
-                    }
+                    mPhone.setVoiceCallForwardingFlag(1, cffEnabled, mDialingNumber);
+                    mPhone.setCallForwardingPreference(cffEnabled);
+                    mPhone.setVideoCallForwardingPreference(cffEnabled);
                 }
 
                 onSetComplete(msg, ar);
@@ -1301,9 +1305,9 @@ public final class ImsPhoneMmiCode extends Handler implements MmiCode {
                 (info.serviceClass & serviceClassMask)
                         == CommandsInterface.SERVICE_CLASS_VOICE) {
             boolean cffEnabled = (info.status == 1);
-            if (mIccRecords != null) {
-                mPhone.setVoiceCallForwardingFlag(1, cffEnabled, info.number);
-            }
+            mPhone.setVoiceCallForwardingFlag(1, cffEnabled, info.number);
+            Rlog.d(LOG_TAG, "makeCFQueryResultMessage cffEnabled  = "+cffEnabled);
+            mPhone.setCallForwardingPreference(cffEnabled);
         }
 
         return TextUtils.replace(template, sources, destinations);
@@ -1339,9 +1343,8 @@ public final class ImsPhoneMmiCode extends Handler implements MmiCode {
                 sb.append(mContext.getText(com.android.internal.R.string.serviceDisabled));
 
                 // Set unconditional CFF in SIM to false
-                if (mIccRecords != null) {
-                    mPhone.setVoiceCallForwardingFlag(1, false, null);
-                }
+                mPhone.setCallForwardingPreference(false);
+                mPhone.setVoiceCallForwardingFlag(1, false, null);
             } else {
 
                 SpannableStringBuilder tb = new SpannableStringBuilder();

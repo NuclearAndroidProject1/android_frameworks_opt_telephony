@@ -789,9 +789,8 @@ public class DcTracker extends DcTrackerBase {
         boolean allowed =
                     (attachedState || (mAutoAttachOnCreation.get() &&
                             (mPhone.getSubId() == dataSub))) &&
-                    recordsLoaded &&
-                    (state == PhoneConstants.State.IDLE ||
                     (subscriptionFromNv || recordsLoaded) &&
+                    (state == PhoneConstants.State.IDLE ||
                      mPhone.getServiceStateTracker().isConcurrentVoiceAndDataAllowed()) &&
                     internalDataEnabled &&
                     defaultDataSelected &&
@@ -1426,10 +1425,12 @@ public class DcTracker extends DcTrackerBase {
         if (DBG) log("tryRestartDataConnections: createAllApnList and cleanUpAllConnections");
         createAllApnList();
         setInitialAttachApn();
-        cleanUpConnectionsOnUpdatedApns(!isDisconnected);
-
+        if (reason.equalsIgnoreCase(Phone.REASON_APN_CHANGED)) {
+            cleanUpConnectionsOnUpdatedApns(!isDisconnected);
+        } else {
+            cleanUpAllConnections(!isDisconnected, reason);
+        }
         // FIXME: See bug 17426028 maybe no conditional is needed.
-        cleanUpAllConnections(!isDisconnected, reason);
         setupDataOnConnectableApns(reason);
     }
 
@@ -2595,7 +2596,7 @@ public class DcTracker extends DcTrackerBase {
     }
 
     /** Return the DC AsyncChannel for the new data connection */
-    private DcAsyncChannel createDataConnection() {
+    protected DcAsyncChannel createDataConnection() {
         if (DBG) log("createDataConnection E");
 
         int id = mUniqueIdGenerator.getAndIncrement();
