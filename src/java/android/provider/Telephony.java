@@ -2749,30 +2749,6 @@ public final class Telephony {
         public static final String EDITED = "edited";
 
         /**
-         * <P>Type: INTEGER (boolean)</P>
-         * @hide
-         */
-        public static final String READ_ONLY = "read_only";
-
-        /**
-         * <P>Type: TEXT</P>
-         * @hide
-         */
-        public static final String PPP_NUMBER =  "ppp_number";
-
-        /**
-         * <P>Type: TEXT</P>
-         * @hide
-         */
-        public static final String LOCALIZED_NAME = "localized_name";
-
-        /**
-         * <P>Type: TEXT</P>
-         * @hide
-         */
-        public static final String VISIT_AREA = "visit_area";
-
-        /**
          * Is this APN visible to the user?
          * <p>Type: INTEGER (boolean) </p>
          * @hide

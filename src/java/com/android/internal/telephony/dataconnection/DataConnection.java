@@ -1891,15 +1891,6 @@ public class DataConnection extends StateMachine {
                     if (DBG) {
                         log("DcActiveState: EVENT_CONNECT cp=" + cp + " dc=" + DataConnection.this);
                     }
-                    if (mApnContexts.containsKey(cp.mApnContext)) {
-                        log("DcActiveState ERROR already added apnContext=" + cp.mApnContext);
-                    } else {
-                        mApnContexts.put(cp.mApnContext, cp);
-                        if (DBG) {
-                            log("DcActiveState msg.what=EVENT_CONNECT RefCount="
-                                    + mApnContexts.size());
-                        }
-                    }
                     notifyConnectCompleted(cp, DcFailCause.NONE, false);
                     retVal = HANDLED;
                     break;

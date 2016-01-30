@@ -83,7 +83,7 @@ public class PhoneProxy extends Handler implements Phone {
     protected static final int EVENT_RADIO_UNAVAILABLE = 8;
     private static final int EVENT_CARRIER_CONFIG_CHANGED = 6;
 
-    private int mPhoneId = 0;
+    protected int mPhoneId = 0;
 
     private Context mContext;
     private BroadcastReceiver mPhoneProxyReceiver = new BroadcastReceiver() {
@@ -112,6 +112,7 @@ public class PhoneProxy extends Handler implements Phone {
         mCommandsInterface.registerForAvailable(this, EVENT_RADIO_AVAILABLE, null);
         mCommandsInterface.registerForVoiceRadioTechChanged(
                              this, EVENT_VOICE_RADIO_TECH_CHANGED, null);
+        mCommandsInterface.registerForNotAvailable(this, EVENT_RADIO_UNAVAILABLE, null);
         mPhoneId = phone.getPhoneId();
         mIccSmsInterfaceManager =
                 new IccSmsInterfaceManager((PhoneBase)this.mActivePhone);
