@@ -32,10 +32,13 @@ package org.codeaurora.ims.qtiims;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+<<<<<<< HEAD
+=======
 import android.telephony.Rlog;
 
 import java.util.ArrayList;
 import java.util.List;
+>>>>>>> d4d7f2ec4917779652f009fe13c8118779e1106e
 
 /*
  * This file contains all the api's through which
@@ -50,6 +53,9 @@ import java.util.List;
 
 public class QtiViceInfo implements Parcelable {
 
+<<<<<<< HEAD
+    private String mViceInfoAsString = null;
+=======
     private static final String TAG = "QtiViceInfo";
     private String mViceInfoAsString = null;
     public int dialogSize = 0;
@@ -81,6 +87,7 @@ public class QtiViceInfo implements Parcelable {
     public static final String CALL_TYPE_VIDEO_RX = "vtrx";
     public static final String CALL_TYPE_VIDEO_HELD = "vtheld";
 
+>>>>>>> d4d7f2ec4917779652f009fe13c8118779e1106e
 
     public QtiViceInfo() {
     }
@@ -89,6 +96,10 @@ public class QtiViceInfo implements Parcelable {
         readFromParcel(in);
     }
 
+<<<<<<< HEAD
+    public void setViceDialogInfoAsString(String value) {
+        mViceInfoAsString = value;
+=======
     /**
      * dialogIds Will have following information -
      * dialogIds[INDEX_DIALOG_ID] - Holds Unique DialogId
@@ -110,6 +121,7 @@ public class QtiViceInfo implements Parcelable {
     public void setViceDialogInfoAsString(String value) {
         mViceInfoAsString = value;
         Rlog.d(TAG,"setViceDialogInfoAsString XML String = " + mViceInfoAsString);
+>>>>>>> d4d7f2ec4917779652f009fe13c8118779e1106e
     }
 
     public String getViceDialogInfoAsString() {
@@ -122,6 +134,9 @@ public class QtiViceInfo implements Parcelable {
     }
 
     private void readFromParcel(Parcel in) {
+<<<<<<< HEAD
+
+=======
        dialogSize = in.readInt();
        Rlog.d(TAG, "readFromParcel size = " + dialogSize);
        if (dialogSize < 0) {
@@ -157,10 +172,14 @@ public class QtiViceInfo implements Parcelable {
             return sb.toString();
         }
         return null;
+>>>>>>> d4d7f2ec4917779652f009fe13c8118779e1106e
     }
 
     @Override
     public void writeToParcel(Parcel out, int flags) {
+<<<<<<< HEAD
+
+=======
         if (callInfo != null) {
             out.writeInt(dialogSize);
             for (int i = 0; i < dialogSize; i++) {
@@ -169,6 +188,7 @@ public class QtiViceInfo implements Parcelable {
             }
             out.setDataPosition(0);
         }
+>>>>>>> d4d7f2ec4917779652f009fe13c8118779e1106e
     }
 
     public static final Creator<QtiViceInfo> CREATOR =
